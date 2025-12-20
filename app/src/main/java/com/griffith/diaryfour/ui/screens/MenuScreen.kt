@@ -17,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Smartphone
+import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -32,14 +33,11 @@ import androidx.navigation.NavHostController
 import com.griffith.diaryfour.Screen
 import java.time.LocalDate
 
-
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun MenuScreen(navController: NavHostController) {
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
+        modifier = Modifier.fillMaxSize().padding(16.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -54,7 +52,6 @@ fun MenuScreen(navController: NavHostController) {
             )
             Spacer(Modifier.height(32.dp))
 
-
             MenuCard("Diary Entry", Icons.AutoMirrored.Filled.MenuBook) {
                 navController.navigate(Screen.Diary.createRoute(LocalDate.now()))
             }
@@ -64,26 +61,24 @@ fun MenuScreen(navController: NavHostController) {
             MenuCard("Phone Usage", Icons.Default.Smartphone) {
                 navController.navigate(Screen.UsageStats.route)
             }
+            MenuCard("Sensor Data", Icons.Default.WbSunny) {
+                navController.navigate(Screen.SensorData.route)
+            }
         }
     }
 }
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MenuCard(text: String, icon: ImageVector, onClick: () -> Unit) {
     Card(
         onClick = onClick,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(80.dp),
+        modifier = Modifier.fillMaxWidth().height(80.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 24.dp)
+            modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp)
         ) {
             Icon(imageVector = icon, contentDescription = null, modifier = Modifier.size(24.dp))
             Spacer(Modifier.width(16.dp))

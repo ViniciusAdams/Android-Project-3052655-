@@ -15,11 +15,9 @@ import java.time.LocalDate
 import java.time.ZoneId
 import java.util.concurrent.TimeUnit
 
-
 fun hasUsageStatsPermission(context: Context): Boolean {
     val appOps = context.getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
     val mode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-        // unsafeCheckOpNoThrow returns MODE_ALLOWED when granted
         appOps.unsafeCheckOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS, android.os.Process.myUid(), context.packageName)
     } else {
         @Suppress("DEPRECATION")
@@ -27,7 +25,6 @@ fun hasUsageStatsPermission(context: Context): Boolean {
     }
     return mode == AppOpsManager.MODE_ALLOWED
 }
-
 
 @RequiresApi(Build.VERSION_CODES.O)
 fun getPhoneUsageForDate(context: Context, date: LocalDate): Long {
@@ -40,7 +37,6 @@ fun getPhoneUsageForDate(context: Context, date: LocalDate): Long {
     return TimeUnit.MILLISECONDS.toMinutes(total)
 }
 
-
 suspend fun savePhoneUsage(context: Context, date: LocalDate, usage: Long) = withContext(Dispatchers.IO) {
     val dir = File(context.filesDir, "usage_stats")
     if (!dir.exists()) {
@@ -50,10 +46,9 @@ suspend fun savePhoneUsage(context: Context, date: LocalDate, usage: Long) = wit
     try {
         FileOutputStream(file).use { it.write(usage.toString().toByteArray()) }
     } catch (e: Exception) {
-        // intentionally ignore cache write failures
+
     }
 }
-
 
 suspend fun readPhoneUsageForDate(context: Context, date: LocalDate): Long? = withContext(Dispatchers.IO) {
     val file = File(File(context.filesDir, "usage_stats"), "$date.txt")

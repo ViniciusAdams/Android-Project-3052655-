@@ -10,22 +10,18 @@ import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.nio.charset.Charset
 
-
 suspend fun readDiaryEntries(filesDir: File, filename: String): List<String> = withContext(Dispatchers.IO) {
     try {
         val file = File(filesDir, filename)
         if (!file.exists()) return@withContext emptyList()
         FileInputStream(file).use { fis ->
             val content = fis.readBytes().toString(Charset.defaultCharset())
-
             content.split("\n\n").filter { it.isNotBlank() }.map { it.trim() }.reversed()
         }
     } catch (e: Exception) {
-
         emptyList()
     }
 }
-
 
 suspend fun appendDiaryEntry(filesDir: File, filename: String, text: String): Boolean = withContext(Dispatchers.IO) {
     try {
@@ -38,7 +34,6 @@ suspend fun appendDiaryEntry(filesDir: File, filename: String, text: String): Bo
     }
 }
 
-
 suspend fun clearDiaryFile(filesDir: File, filename: String): Boolean = withContext(Dispatchers.IO) {
     try {
         File(filesDir, filename).writeText("")
@@ -47,7 +42,6 @@ suspend fun clearDiaryFile(filesDir: File, filename: String): Boolean = withCont
         false
     }
 }
-
 
 fun timestampNow(): String {
     val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())

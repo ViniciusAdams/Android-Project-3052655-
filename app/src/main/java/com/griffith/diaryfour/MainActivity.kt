@@ -1,143 +1,63 @@
-package com.griffith.diaryfour.ui.screens
+package com.griffith.diaryfour
 
 import android.os.Build
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.navigation.NavHostController
-import com.griffith.diaryfour.data.readDiaryEntries
-import java.time.Instant
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import com.griffith.diaryfour.ui.screens.CalendarScreen
+import com.griffith.diaryfour.ui.screens.DiaryScreen
+import com.griffith.diaryfour.ui.screens.MenuScreen
+import com.griffith.diaryfour.ui.screens.SensorScreen
+import com.griffith.diaryfour.ui.screens.UsageStatsScreen
+import com.griffith.diaryfour.ui.theme.DiaryfourTheme
 import java.time.LocalDate
-import java.time.ZoneId
 
-/**
- * A screen that displays a calendar and shows diary entries for the selected date.
- */
-@RequiresApi(Build.VERSION_CODES.O)
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun CalendarScreen(navController: NavHostController) {
-    val context = LocalContext.current
-    var selectedDate by remember { mutableStateOf<LocalDate?>(null) }
-    var entries by remember { mutableStateOf(listOf<String>()) }
-    var showPicker by remember { mutableStateOf(false) }
-    val datePickerState = rememberDatePickerState()
+class MainActivity : ComponentActivity() {
+    @RequiresApi(Build.VERSION_CODES.O)
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
 
-    // When a date is selected, load the diary entries for that date.
-    LaunchedEffect(selectedDate) {
-        selectedDate?.let { entries = readDiaryEntries(context.filesDir, "$it.txt") }
+        setContent {
+            // Apply the custom theme, which handles colors, typography, and system bar.
+            DiaryfourTheme {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    AppNavigation()
+                }
+            }
+        }
     }
+}
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Diary Calendar") },
-                navigationIcon = {
-                    IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                }
-            )
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun AppNavigation() {
+    val navController = rememberNavController()
+    NavHost(navController = navController, startDestination = Screen.Menu.route) {
+        composable(Screen.Menu.route) { MenuScreen(navController) }
+        composable(
+            route = Screen.Diary.route,
+            arguments = listOf(navArgument("date") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val dateStr = backStackEntry.arguments?.getString("date") ?: LocalDate.now().toString()
+            val date = LocalDate.parse(dateStr)
+            DiaryScreen(navController, date)
         }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .padding(padding)
-                .padding(16.dp)
-                .fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Button(onClick = { showPicker = true }) {
-                Icon(Icons.Default.CalendarMonth, contentDescription = "Select Date")
-                Spacer(Modifier.width(8.dp))
-                Text(selectedDate?.toString() ?: "Select a Date")
-            }
-            Spacer(Modifier.height(16.dp))
-
-            LazyColumn(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                if (selectedDate == null) {
-                    item {
-                        Text(
-                            "Please select a date to view entries.",
-                            modifier = Modifier.padding(top = 24.dp),
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                } else if (entries.isEmpty()) {
-                    item {
-                        Text(
-                            "No entries for this date.",
-                            modifier = Modifier.padding(top = 24.dp),
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                } else {
-                    items(entries) { entry ->
-                        Card(modifier = Modifier.fillMaxWidth()) {
-                            Text(entry.trim(), modifier = Modifier.padding(16.dp))
-                        }
-                    }
-                }
-            }
-
-            if (showPicker) {
-                DatePickerDialog(
-                    onDismissRequest = { showPicker = false },
-                    confirmButton = {
-                        TextButton(
-                            onClick = {
-                                showPicker = false
-                                datePickerState.selectedDateMillis?.let {
-                                    selectedDate = Instant.ofEpochMilli(it)
-                                        .atZone(ZoneId.systemDefault()).toLocalDate()
-                                }
-                            },
-                            enabled = datePickerState.selectedDateMillis != null
-                        ) { Text("OK") }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = { showPicker = false }) { Text("Cancel") }
-                    }
-                ) { DatePicker(state = datePickerState) }
-            }
-        }
+        composable(Screen.Calendar.route) { CalendarScreen(navController) }
+        composable(Screen.UsageStats.route) { UsageStatsScreen(navController) }
+        composable(Screen.SensorData.route) { SensorScreen(navController) }
     }
 }

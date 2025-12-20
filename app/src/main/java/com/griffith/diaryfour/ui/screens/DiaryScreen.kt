@@ -1,6 +1,5 @@
 package com.griffith.diaryfour.ui.screens
 
-
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
@@ -14,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -46,6 +46,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -60,14 +61,12 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 
-
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DiaryScreen(navController: NavHostController, initialDate: LocalDate) {
-    val context = androidx.compose.ui.platform.LocalContext.current
+    val context = LocalContext.current
     val scope = rememberCoroutineScope()
-
 
     var selectedDate by remember { mutableStateOf(initialDate) }
     var textState by remember { mutableStateOf(TextFieldValue("")) }
@@ -76,11 +75,9 @@ fun DiaryScreen(navController: NavHostController, initialDate: LocalDate) {
     var showPicker by remember { mutableStateOf(false) }
     val datePickerState = rememberDatePickerState()
 
-
     LaunchedEffect(selectedDate) {
         entries = readDiaryEntries(context.filesDir, "${selectedDate}.txt")
     }
-
 
     LaunchedEffect(message) {
         if (message != null) {
@@ -102,78 +99,46 @@ fun DiaryScreen(navController: NavHostController, initialDate: LocalDate) {
         }
     ) { padding ->
         Column(
-            modifier = Modifier
-                .padding(padding)
-                .padding(horizontal = 16.dp)
-                .fillMaxSize()
+            modifier = Modifier.padding(padding).padding(horizontal = 16.dp).fillMaxSize()
         ) {
-
             Button(onClick = { showPicker = true }) {
                 Icon(Icons.Default.CalendarMonth, contentDescription = "Select Date")
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.width(8.dp))
                 Text(selectedDate.toString())
             }
-
 
             LazyColumn(
                 modifier = Modifier.weight(1f),
                 contentPadding = PaddingValues(vertical = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
-                reverseLayout = true // Shows latest entries at the bottom, like a chat.
+                reverseLayout = true
             ) {
                 if (entries.isEmpty()) {
-                    item {
-                        Text(
-                            "No entries for this date.",
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 24.dp),
-                            textAlign = TextAlign.Center
-                        )
-                    }
+                    item { Text("No entries for this date.", modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp), textAlign = TextAlign.Center) }
                 } else {
                     items(entries) { entry ->
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-                        ) {
+                        Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
                             Text(entry.trim(), modifier = Modifier.padding(16.dp))
                         }
                     }
                 }
             }
 
-
             AnimatedVisibility(visible = message != null) {
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = MaterialTheme.shapes.medium,
-                    color = MaterialTheme.colorScheme.secondaryContainer,
-                    tonalElevation = 4.dp
-                ) {
-                    Text(
-                        text = message ?: "",
-                        modifier = Modifier.padding(16.dp),
-                        color = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
+                Surface(modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.secondaryContainer, tonalElevation = 4.dp) {
+                    Text(text = message ?: "", modifier = Modifier.padding(16.dp), color = MaterialTheme.colorScheme.onSecondaryContainer)
                 }
             }
-
 
             Column(modifier = Modifier.padding(vertical = 8.dp)) {
                 OutlinedTextField(
                     value = textState,
                     onValueChange = { textState = it },
                     label = { Text("Write your entry...") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 56.dp, max = 160.dp)
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp, max = 160.dp)
                 )
                 Spacer(Modifier.height(8.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     FilledTonalButton(onClick = {
                         scope.launch {
                             clearDiaryFile(context.filesDir, "${selectedDate}.txt")
@@ -182,7 +147,7 @@ fun DiaryScreen(navController: NavHostController, initialDate: LocalDate) {
                         }
                     }) {
                         Icon(Icons.Filled.Delete, contentDescription = "Clear All")
-                        Spacer(Modifier.height(8.dp))
+                        Spacer(Modifier.width(8.dp))
                         Text("Clear All")
                     }
                     Button(
@@ -193,7 +158,7 @@ fun DiaryScreen(navController: NavHostController, initialDate: LocalDate) {
                                 scope.launch {
                                     if (appendDiaryEntry(context.filesDir, "${selectedDate}.txt", entry)) {
                                         entries = readDiaryEntries(context.filesDir, "${selectedDate}.txt")
-                                        textState = TextFieldValue("") // Clear input field.
+                                        textState = TextFieldValue("")
                                         message = "Entry Saved!"
                                     }
                                 }
@@ -202,12 +167,11 @@ fun DiaryScreen(navController: NavHostController, initialDate: LocalDate) {
                         enabled = textState.text.isNotBlank()
                     ) {
                         Icon(Icons.Filled.Save, contentDescription = "Save")
-                        Spacer(Modifier.height(8.dp))
+                        Spacer(Modifier.width(8.dp))
                         Text("Save")
                     }
                 }
             }
-
 
             if (showPicker) {
                 DatePickerDialog(
@@ -217,8 +181,7 @@ fun DiaryScreen(navController: NavHostController, initialDate: LocalDate) {
                             onClick = {
                                 showPicker = false
                                 datePickerState.selectedDateMillis?.let {
-                                    selectedDate = Instant.ofEpochMilli(it)
-                                        .atZone(ZoneId.systemDefault()).toLocalDate()
+                                    selectedDate = Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate()
                                 }
                             },
                             enabled = datePickerState.selectedDateMillis != null
