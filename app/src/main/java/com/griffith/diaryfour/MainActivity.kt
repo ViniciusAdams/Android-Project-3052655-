@@ -27,9 +27,8 @@ class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         setContent {
-            // Apply the custom theme, which handles colors, typography, and system bar.
+
             DiaryfourTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
@@ -46,6 +45,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
+    // By starting the app at the Menu, we ensure the back button works everywhere else.
     NavHost(navController = navController, startDestination = Screen.Menu.route) {
         composable(Screen.Menu.route) { MenuScreen(navController) }
         composable(
