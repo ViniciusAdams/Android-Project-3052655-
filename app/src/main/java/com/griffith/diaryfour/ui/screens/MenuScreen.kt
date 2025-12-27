@@ -33,18 +33,25 @@ import androidx.navigation.NavHostController
 import com.griffith.diaryfour.Screen
 import java.time.LocalDate
 
+/**
+ * This is our app's main menu. It's a simple screen with a few buttons to get to the other screens.
+ * We're using a Box to center the content, which is a nice and easy way to do that.
+ */
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun MenuScreen(navController: NavHostController) {
+    // A Box to center the menu on the screen.
     Box(
         modifier = Modifier.fillMaxSize().padding(16.dp),
         contentAlignment = Alignment.Center
     ) {
+        // A Column to lay out the menu items vertically.
         Column(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxWidth()
         ) {
+            // The app's title. It's big and bold, just like we like it.
             Text(
                 "Diary Four",
                 style = MaterialTheme.typography.displayMedium,
@@ -52,6 +59,8 @@ fun MenuScreen(navController: NavHostController) {
             )
             Spacer(Modifier.height(32.dp))
 
+            // These are the buttons that take you to the other screens.
+            // We're using a reusable `MenuCard` composable to keep the code clean.
             MenuCard("Diary Entry", Icons.AutoMirrored.Filled.MenuBook) {
                 navController.navigate(Screen.Diary.createRoute(LocalDate.now()))
             }
@@ -68,14 +77,20 @@ fun MenuScreen(navController: NavHostController) {
     }
 }
 
+/**
+ * This is a reusable composable that we use to create the menu items.
+ * It's a simple Card with an icon and some text.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MenuCard(text: String, icon: ImageVector, onClick: () -> Unit) {
+    // A Card is a nice way to group content together.
     Card(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth().height(80.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
+        // A Row to lay out the icon and text horizontally.
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp)

@@ -1,7 +1,7 @@
 plugins {
     id("com.android.application")
-    kotlin("android")
-    kotlin("plugin.compose") version "2.0.21"
+    id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.plugin.compose")
 }
 
 android {
@@ -20,17 +20,20 @@ android {
         compose = true
     }
 
-    composeOptions {
-
-    }
+    composeOptions {}
 
     kotlinOptions {
         jvmTarget = "1.8"
     }
+
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
+    }
 }
 
 dependencies {
-
     val composeBom = platform("androidx.compose:compose-bom:2024.06.00")
     implementation(composeBom)
     androidTestImplementation(composeBom)
@@ -50,13 +53,8 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling")
 
     implementation("androidx.navigation:navigation-compose:2.7.3")
-
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2")
-
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
-
-    // For Charts
-    implementation("com.patrykandpatrick.vico:compose-m3:1.14.0")
 
     implementation(libs.places)
 

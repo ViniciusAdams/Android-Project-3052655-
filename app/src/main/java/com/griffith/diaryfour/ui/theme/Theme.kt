@@ -29,8 +29,8 @@ private val LightColorScheme = lightColorScheme(
 
 @Composable
 fun DiaryfourTheme(
-
-    darkTheme: Boolean = true,
+    // By setting darkTheme to false, the app will always be in light mode (white background).
+    darkTheme: Boolean = false,
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
