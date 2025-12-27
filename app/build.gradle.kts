@@ -1,8 +1,7 @@
 plugins {
     id("com.android.application")
-    kotlin("android")
-    // The compose compiler plugin is tied to your Kotlin version.
-    // We'll keep the version you have for now.kotlin("plugin.compose") version "2.0.21"
+    id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.plugin.compose")
 }
 
 android {
@@ -21,27 +20,28 @@ android {
         compose = true
     }
 
-    composeOptions {
-        // The kotlinCompilerExtensionVersion is managed by the compose plugin
-    }
+    composeOptions {}
 
     kotlinOptions {
         jvmTarget = "1.8"
     }
+
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
+    }
 }
 
 dependencies {
-    // Platform for Compose BOM - This manages all compose library versions
     val composeBom = platform("androidx.compose:compose-bom:2024.06.00")
     implementation(composeBom)
     androidTestImplementation(composeBom)
 
-    // AndroidX & KTX
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
-    implementation("androidx.activity:activity-compose:1.9.3") // Using the single latest version
+    implementation("androidx.activity:activity-compose:1.9.3")
 
-    // Compose UI - No versions needed, BOM handles them
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.foundation:foundation")
@@ -49,23 +49,15 @@ dependencies {
     implementation("androidx.compose.material3:material3-window-size-class")
     implementation("androidx.compose.material:material-icons-extended")
 
-    // UI Tools for Preview
     implementation("androidx.compose.ui:ui-tooling-preview")
     debugImplementation("androidx.compose.ui:ui-tooling")
 
-    // Navigation
     implementation("androidx.navigation:navigation-compose:2.7.3")
-
-    // Lifecycle
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
 
-    // Kotlinx Datetime
-    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0") // Using the single latest version
-
-    // Google Places (from your version catalog)
     implementation(libs.places)
 
-    // Testing
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")

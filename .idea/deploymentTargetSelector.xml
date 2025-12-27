@@ -4,10 +4,10 @@
     <selectionStates>
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2025-11-01T19:26:23.908744889Z">
+        <DropdownSelection timestamp="2025-12-17T21:12:37.379642900Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="LocalEmulator" identifier="path=/home/vini/.android/avd/Medium_Phone.avd" />
+              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\vinia\.android\avd\Pixel_8.avd" />
             </handle>
           </Target>
         </DropdownSelection>
