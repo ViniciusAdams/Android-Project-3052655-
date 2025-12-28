@@ -50,36 +50,36 @@ import java.time.format.TextStyle
 import java.util.Locale
 
 /**
- * This screen is all about showing the user how much they're using their phone.
- * It requires a special permission, so we have to handle the case where the user hasn't granted it yet.
+ * screen displays phone usage statistics. It requires the `GET_USAGE_STATS` permission,
+ * which is a special permission that must be granted by the user in the system settings.
+ * screen handles both the permission request flow and the display of the data.
  */
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UsageStatsScreen(navController: NavHostController) {
-    // We need the context to check for the permission and to get the usage stats.
+    // The context is required for system service access, such as checking permissions and querying usage stats.
     val context = LocalContext.current
 
-    // These are our state variables. `usageStats` holds the data for the last week,
-    // and `granted` tells us if we have the permission to get that data.
+    // State variables for the screen. `granted` tracks the permission status, and `usageStats` holds the retrieved data.
     var usageStats by remember { mutableStateOf<Map<LocalDate, Long>>(emptyMap()) }
     var granted by remember { mutableStateOf(hasUsageStatsPermission(context)) }
 
-    // This is the modern way to handle activity results in Compose. We use it to re-check the permission
-    // after the user has been to the settings screen.
+    // `rememberLauncherForActivityResult` is the modern Compose way to handle the result of an activity,
+    // in this case, the return from the system settings screen.
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+        // After the user returns from settings, we re-check the permission status.
         granted = hasUsageStatsPermission(context)
     }
 
-    // This is a side effect that runs whenever the `granted` state changes.
-    // If the user has granted the permission, we load the usage stats for the last week.
+    // `LaunchedEffect` triggers the data loading process when the `granted` state becomes true.
     LaunchedEffect(granted) {
         if (granted) {
             val today = LocalDate.now()
             val usage = getPhoneUsageForDate(context, today)
-            savePhoneUsage(context, today, usage)
+            savePhoneUsage(context, today, usage) // The data is cached to avoid repeated, slow queries.
 
-            // We want to show the stats for the last 7 days, so we loop back from today.
+            // The usage stats for the last 7 days are fetched and mapped.
             val pastWeekStats = (0..6).map { i ->
                 val date = today.minusDays(i.toLong())
                 val dailyUsage = readPhoneUsageForDate(context, date)
@@ -90,13 +90,12 @@ fun UsageStatsScreen(navController: NavHostController) {
         }
     }
 
-    // A Scaffold to give our screen some structure.
+    // A standard `Scaffold` provides the screen structure.
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Phone Usage Stats") },
                 navigationIcon = {
-                    // The back button.
                     IconButton(onClick = { navController.navigateUp() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
@@ -109,13 +108,13 @@ fun UsageStatsScreen(navController: NavHostController) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             if (granted) {
-                // If we're still loading the stats, we show a progress indicator.
+                // A loading indicator is shown while the usage stats are being calculated.
                 if (usageStats.isEmpty()) {
                     CircularProgressIndicator()
                     Spacer(Modifier.height(16.dp))
                     Text("Calculating usage stats...")
                 } else {
-                    // The total usage for the week. A nice, big number to grab the user's attention.
+                    // The total usage for the week is prominently displayed.
                     val weeklyTotal = usageStats.values.sum()
 
                     Card(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
@@ -125,19 +124,19 @@ fun UsageStatsScreen(navController: NavHostController) {
                         }
                     }
 
-                    // The bar chart. This is a great way to visualize the data.
+                    // The bar chart provides a visual breakdown of the weekly usage.
                     Column(modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp)) {
                         Text("Weekly Usage Breakdown", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(bottom = 8.dp))
                         BarChart(
                             data = usageStats.entries.associate {
-                                // We use the short day of the week as the label for the bar chart.
+                                // The day of the week is used as the label for each bar.
                                 it.key.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.getDefault()) to it.value.toFloat()
                             },
                             barColor = MaterialTheme.colorScheme.primary
                         )
                     }
 
-                    // And finally, a list of the daily usage stats.
+                    // A `LazyColumn` efficiently displays the detailed daily usage stats.
                     LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         items(usageStats.keys.sortedDescending().toList()) { date ->
                             val usage = usageStats[date] ?: 0
@@ -149,7 +148,7 @@ fun UsageStatsScreen(navController: NavHostController) {
                     }
                 }
             } else {
-                // If the user hasn't granted the permission, we show them a message and a button to go to the settings screen.
+                // If the required permission is not granted, a message is displayed with a button to open the system settings.
                 Column(
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.Center,

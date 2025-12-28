@@ -46,36 +46,36 @@ import java.time.LocalDate
 import java.time.ZoneId
 
 /**
- * This screen is a simple calendar view of the diary entries.
- * The user can pick a date and see all the entries for that day.
+ * provides a calendar-based view for accessing diary entries.
+ * It allows the user to select a specific date and view all entries recorded on that day.
+ * The design is state-driven, reacting to changes in the selected date.
  */
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CalendarScreen(navController: NavHostController) {
-    // We need the context to read the diary entry files.
+    // The context is necessary for accessing the file system to read diary entries.
     val context = LocalContext.current
 
-    // These are our state variables. They hold the currently selected date, the list of entries,
-    // and whether or not the date picker is showing.
-    var selectedDate by remember { mutableStateOf<LocalDate?>(null) }
+    // State variables for the screen. `remember` is used to maintain state across recompositions.
+    var selectedDate by remember { mutableStateOf<LocalDate?>(null) } // Nullable, as no date is selected initially.
     var entries by remember { mutableStateOf(listOf<String>()) }
-    var showPicker by remember { mutableStateOf(false) }
+    var showPicker by remember { mutableStateOf(false) } // Controls the visibility of the DatePickerDialog.
     val datePickerState = rememberDatePickerState()
 
-    // This is a side effect that runs whenever the user picks a new date.
-    // It reads the diary entries for that date and updates the `entries` state.
+    // `LaunchedEffect` triggers a data fetch from the file system whenever `selectedDate` changes.
+    // standard and efficient pattern for handling data loading as a side effect of state changes.
     LaunchedEffect(selectedDate) {
         selectedDate?.let { entries = readDiaryEntries(context.filesDir, "$it.txt") }
     }
 
-    // A Scaffold to give our screen a basic layout with a top app bar.
+    // `Scaffold` provides the standard Material Design layout structure.
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Diary Calendar") },
                 navigationIcon = {
-                    // A simple back button to go back to the menu.
+                    // Standard back navigation.
                     IconButton(onClick = { navController.navigateUp() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
@@ -87,7 +87,7 @@ fun CalendarScreen(navController: NavHostController) {
             modifier = Modifier.padding(padding).padding(16.dp).fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // The button that shows the date picker.
+            // primary function is to toggle the visibility of the DatePickerDialog.
             Button(onClick = { showPicker = true }) {
                 Icon(Icons.Default.CalendarMonth, contentDescription = "Select Date")
                 Spacer(Modifier.width(8.dp))
@@ -95,7 +95,7 @@ fun CalendarScreen(navController: NavHostController) {
             }
             Spacer(Modifier.height(16.dp))
 
-            // This is our list of diary entries. It's a LazyColumn, so it's memory-efficient.
+            // `LazyColumn` is used here for efficient display of a potentially long list of diary entries.
             LazyColumn(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -113,7 +113,7 @@ fun CalendarScreen(navController: NavHostController) {
                 }
             }
 
-            // The date picker dialog. We only show it when `showPicker` is true.
+            // The `DatePickerDialog` is conditionally rendered based on the `showPicker` boolean state.
             if (showPicker) {
                 DatePickerDialog(
                     onDismissRequest = { showPicker = false },
