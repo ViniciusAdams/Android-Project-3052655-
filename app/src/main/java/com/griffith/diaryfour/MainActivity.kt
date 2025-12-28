@@ -24,23 +24,23 @@ import com.griffith.diaryfour.ui.theme.DiaryfourTheme
 import java.time.LocalDate
 
 /**
- * This is the heart of our app, the main activity. It's where everything starts.
- * We use Jetpack Compose to build our UI, which makes things a lot more fun.
+ * heart of the app, the main activity.
+ * Jetpack Compose to build the UI.
  */
 class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Here, we're telling the activity to use our Compose UI.
+        // activity to use our Compose UI.
         setContent {
-            // We wrap our entire app in our custom theme.
+            //  wrap entire app in our custom theme.
             DiaryfourTheme {
-                // A Surface is like a canvas for our UI.
+                // A Surface is like a canvas for UI.
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    // This is where we set up all the navigation between our screens.
+                    // we set up all the navigation between our screens.
                     AppNavigation()
                 }
             }
@@ -49,32 +49,32 @@ class MainActivity : ComponentActivity() {
 }
 
 /**
- * This composable is our app's navigation hub. It defines all the possible screens
+ * composable  app's navigation hub. defines all the possible screens
  * and how to get to them.
  */
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun AppNavigation() {
-    // The NavController is the engine that drives our navigation.
+    // NavController is the engine that drives our navigation.
     val navController = rememberNavController()
 
-    // The NavHost is the container for all our screens.
+    // NavHost is the container for all the screens.
     NavHost(navController = navController, startDestination = Screen.Menu.route) {
-        // Our main menu screen. This is the first thing the user sees.
+        // main menu screen. the first thing the user sees.
         composable(Screen.Menu.route) { MenuScreen(navController) }
 
-        // The diary screen. It takes a date as an argument, so we can show the entries for a specific day.
+        // The diary screen. It takes a date as an argument,  show the entries for a specific day.
         composable(
             route = Screen.Diary.route,
             arguments = listOf(navArgument("date") { type = NavType.StringType })
         ) { backStackEntry ->
-            // We get the date from the navigation arguments, or just use today's date if it's not there.
+            // get the date from the navigation arguments, or just use today's date if it's not there.
             val dateStr = backStackEntry.arguments?.getString("date") ?: LocalDate.now().toString()
             val date = LocalDate.parse(dateStr)
             DiaryScreen(navController, date)
         }
 
-        // The rest of our screens. They're all pretty straightforward.
+        // The rest of the screens. They're all pretty straightforward.
         composable(Screen.Calendar.route) { CalendarScreen(navController) }
         composable(Screen.UsageStats.route) { UsageStatsScreen(navController) }
         composable(Screen.SensorData.route) { SensorScreen(navController) }

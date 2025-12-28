@@ -11,9 +11,9 @@ import java.io.FileOutputStream
 import java.nio.charset.Charset
 
 /**
- * This function is responsible for reading all the diary entries from a given file.
- * It runs on a background thread to avoid blocking the UI, which is important for file I/O.
- * If the file doesn't exist, it simply returns an empty list.
+ * handles the reading of diary entries from the file system.
+ * It operates on a background thread using `withContext(Dispatchers.IO)` to prevent blocking the UI.
+ * If the specified file does not exist, it returns an empty list.
  */
 suspend fun readDiaryEntries(filesDir: File, filename: String): List<String> = withContext(Dispatchers.IO) {
     try {
@@ -21,19 +21,19 @@ suspend fun readDiaryEntries(filesDir: File, filename: String): List<String> = w
         if (!file.exists()) return@withContext emptyList()
         FileInputStream(file).use { fis ->
             val content = fis.readBytes().toString(Charset.defaultCharset())
-            // Our diary entries are separated by a double newline, so we split the file content by that.
+            // The file content is parsed by splitting it by a double newline, which delimits each entry.
             content.split("\n\n").filter { it.isNotBlank() }.map { it.trim() }.reversed()
         }
     } catch (e: Exception) {
-        // If something goes wrong, we'll just return an empty list to avoid crashing the app.
+        // In the case of an I/O error, an empty list is returned to ensure the app remains stable.
         emptyList()
     }
 }
 
 /**
- * This function appends a new diary entry to the end of a file.
- * It's designed to be safe and efficient, running on a background thread.
- * If the file doesn't exist, it will be created automatically.
+ * appends a new diary entry to a specified file.
+ * The operation is performed on a background thread. If the file does not exist, it is created automatically.
+ * @return `true` if the write operation is successful,`false` otherwisee.
  */
 suspend fun appendDiaryEntry(filesDir: File, filename: String, text: String): Boolean = withContext(Dispatchers.IO) {
     try {
@@ -42,28 +42,28 @@ suspend fun appendDiaryEntry(filesDir: File, filename: String, text: String): Bo
         }
         true
     } catch (e: Exception) {
-        // If we fail to write to the file, we return false to let the caller know.
+        // A failure in the write operation is signaled by returning `false`.
         false
     }
 }
 
 /**
- * This function clears all the content from a diary file, effectively deleting all entries.
- * It's a simple and straightforward way to reset a diary for a given day.
+ * clears all content from a diary file.
+ * It is the primary mechanism for deleting all entries for a specific date.
+ * @return `true` if the file is successfully cleared, `false` otherwise.
  */
 suspend fun clearDiaryFile(filesDir: File, filename: String): Boolean = withContext(Dispatchers.IO) {
     try {
         File(filesDir, filename).writeText("")
         true
     } catch (e: Exception) {
-        // If we can't clear the file, we return false.
         false
     }
 }
 
 /**
- * A handy utility function to get the current date and time as a nicely formatted string.
- * This is used to timestamp the diary entries.
+ * A utility function that generates a formatted timestamp for the current moment.
+ * used to prefix each new diary entry.
  */
 fun timestampNow(): String {
     val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())

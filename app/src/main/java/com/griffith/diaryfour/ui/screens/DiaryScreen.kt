@@ -62,32 +62,34 @@ import java.time.LocalDate
 import java.time.ZoneId
 
 /**
- * This screen is where the user can write and view their diary entries.
- * It's a pretty standard setup with a date picker, a list of entries, and a text field to add new ones.
+ *  provides the core journaling functionality.
+ * It allows for the creation, display, and management of diary entries for a user-selected date.
+ * The architecture is centered around a stateful composable that reacts to user input and data changes.
  */
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DiaryScreen(navController: NavHostController, initialDate: LocalDate) {
-    // We need the context to access the file system, and a coroutine scope to launch background tasks.
+    // context is required for file system access, while the coroutine scope is used for launching background tasks.
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
-    // These are the state variables that drive our UI. They're all wrapped in `remember` so they survive recompositions.
+    // State variables are managed here. used to ensure state is preserved across recompositions.
     var selectedDate by remember { mutableStateOf(initialDate) }
     var textState by remember { mutableStateOf(TextFieldValue("")) }
     var entries by remember { mutableStateOf(listOf<String>()) }
-    var message by remember { mutableStateOf<String?>(null) } // This is for showing temporary messages to the user.
-    var showPicker by remember { mutableStateOf(false) } // This controls the visibility of the date picker.
+    var message by remember { mutableStateOf<String?>(null) } // Used to display transient feedback to the user.
+    var showPicker by remember { mutableStateOf(false) } // Controls the visibility of the date picker dialog.
     val datePickerState = rememberDatePickerState()
 
-    // This is a side effect that runs whenever the selected date changes.
-    // It reads the diary entries for the new date from the file system.
+    // A `LaunchedEffect` is used to trigger a data fetch whenever the `selectedDate` state changes.
+    // key Compose pattern for handling side effects in a controlled manmer.
     LaunchedEffect(selectedDate) {
         entries = readDiaryEntries(context.filesDir, "${selectedDate}.txt")
     }
 
-    // This side effect is for showing temporary messages. It clears the message after a couple of seconds.
+    // effect manages the display of transient user feedback messages.
+    // automatically dismisses the message after a 2-second delay.
     LaunchedEffect(message) {
         if (message != null) {
             delay(2000)
@@ -95,13 +97,13 @@ fun DiaryScreen(navController: NavHostController, initialDate: LocalDate) {
         }
     }
 
-    // Scaffold is a great way to structure a screen with a top app bar.
+    // `Scaffold` provides the basic Material Design layout structure for the screen.
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Diary") },
                 navigationIcon = {
-                    // A simple back button to go to the previous screen.
+                    // A standard back navigation icon.
                     IconButton(onClick = { navController.navigateUp() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
@@ -112,19 +114,19 @@ fun DiaryScreen(navController: NavHostController, initialDate: LocalDate) {
         Column(
             modifier = Modifier.padding(padding).padding(horizontal = 16.dp).fillMaxSize()
         ) {
-            // The button to open the date picker.
+            // button triggers the display of the date picker dialog.
             Button(onClick = { showPicker = true }) {
                 Icon(Icons.Default.CalendarMonth, contentDescription = "Select Date")
                 Spacer(Modifier.width(8.dp))
                 Text(selectedDate.toString())
             }
 
-            // This is the list of diary entries. It's a LazyColumn, so it only renders the items that are visible.
+            // A `LazyColumn` is used for displaying the list of entries to ensure efficient rendering of long lists.
             LazyColumn(
-                modifier = Modifier.weight(1f), // This makes the list take up all the available space.
+                modifier = Modifier.weight(1f), // `weight(1f)` make the list expand to fill available space.
                 contentPadding = PaddingValues(vertical = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
-                reverseLayout = true // This shows the newest entries at the bottom.
+                reverseLayout = true // displays the newest entries at the bottom, which is a common pattern for chat-like interfaces.
             ) {
                 if (entries.isEmpty()) {
                     item { Text("No entries for this date.", modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp), textAlign = TextAlign.Center) }
@@ -137,14 +139,14 @@ fun DiaryScreen(navController: NavHostController, initialDate: LocalDate) {
                 }
             }
 
-            // This is a small message that appears at the bottom of the screen when an entry is saved or deleted.
+            // A temporary message that provides feedback on save or delete operations.
             AnimatedVisibility(visible = message != null) {
                 Surface(modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.secondaryContainer, tonalElevation = 4.dp) {
                     Text(text = message ?: "", modifier = Modifier.padding(16.dp), color = MaterialTheme.colorScheme.onSecondaryContainer)
                 }
             }
 
-            // This is where the user can write new entries.
+            // This section contains the text input field and action buttons.
             Column(modifier = Modifier.padding(vertical = 8.dp)) {
                 OutlinedTextField(
                     value = textState,
@@ -154,7 +156,7 @@ fun DiaryScreen(navController: NavHostController, initialDate: LocalDate) {
                 )
                 Spacer(Modifier.height(8.dp))
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    // A button to clear all the entries for the selected date.
+                    // This button provides a way to clear all entries for the selected date.
                     FilledTonalButton(onClick = {
                         scope.launch {
                             clearDiaryFile(context.filesDir, "${selectedDate}.txt")
@@ -166,15 +168,16 @@ fun DiaryScreen(navController: NavHostController, initialDate: LocalDate) {
                         Spacer(Modifier.width(8.dp))
                         Text("Clear All")
                     }
-                    // The button to save the new entry.
+                    // The primary action button for saving a new diary entry.
                     Button(
                         onClick = {
                             val content = textState.text.trim()
                             if (content.isNotEmpty()) {
                                 val entry = "${timestampNow()} — $content\n\n"
+                                // File I/O is performed in a background coroutine.
                                 scope.launch {
                                     if (appendDiaryEntry(context.filesDir, "${selectedDate}.txt", entry)) {
-                                        // After saving, we reload the entries and clear the text field.
+                                        // After a successful save, the UI is updated to reflect the new state.
                                         entries = readDiaryEntries(context.filesDir, "${selectedDate}.txt")
                                         textState = TextFieldValue("")
                                         message = "Entry Saved!"
@@ -191,7 +194,7 @@ fun DiaryScreen(navController: NavHostController, initialDate: LocalDate) {
                 }
             }
 
-            // The date picker dialog. It's only shown when `showPicker` is true.
+            // The `DatePickerDialog` is conditionally displayed based on the `showPicker` state.
             if (showPicker) {
                 DatePickerDialog(
                     onDismissRequest = { showPicker = false },

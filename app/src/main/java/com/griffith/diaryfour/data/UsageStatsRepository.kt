@@ -16,12 +16,12 @@ import java.time.ZoneId
 import java.util.concurrent.TimeUnit
 
 /**
- * A helper function to check if we have the "Usage Stats" permission.
- * This is a special permission that the user has to grant from the device settings.
+ *  check if the app has been granted the `GET_USAGE_STATS` permission.
+ * special permission that requires the user to grant access through the system settings.
  */
 fun hasUsageStatsPermission(context: Context): Boolean {
     val appOps = context.getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
-    // AppOpsManager is the way to go for checking this permission.
+    // The AppOpsManager is used to check the mode of the specific permission.
     val mode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
         appOps.unsafeCheckOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS, android.os.Process.myUid(), context.packageName)
     } else {
@@ -32,26 +32,25 @@ fun hasUsageStatsPermission(context: Context): Boolean {
 }
 
 /**
- * This function queries the system for the total phone usage for a given date.
- * It requires the "Usage Stats" permission to be granted.
- * The result is returned in minutes.
+ * queries the system's `UsageStatsManager` to get the total phone usage for a specific date.
+ * It requires the `GET_USAGE_STATS` permission. The returned value is in minutes.
  */
 @RequiresApi(Build.VERSION_CODES.O)
 fun getPhoneUsageForDate(context: Context, date: LocalDate): Long {
     val usageStatsManager = context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
-    // We need to define a time range to query the usage stats.
+    // A time range for the query must be defined, from the start to the end of the given date.
     val start = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
     val end = date.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
     val stats = usageStatsManager.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, start, end)
 
-    // We sum up the total time in the foreground for all apps.
+    // The total time in the foreground for all apps is summed up to get the total usage.
     val total = stats?.sumOf { it.totalTimeInForeground } ?: 0L
     return TimeUnit.MILLISECONDS.toMinutes(total)
 }
 
 /**
- * This function saves the phone usage for a given date to a file.
- * This is useful because querying the usage stats can be slow, so we cache the results.
+ * saves the phone usage data to a local file.
+ * caching strategy is used to avoid the performance cost of repeatedly querying the `UsageStatsManager`.
  */
 suspend fun savePhoneUsage(context: Context, date: LocalDate, usage: Long) = withContext(Dispatchers.IO) {
     val dir = File(context.filesDir, "usage_stats")
@@ -62,13 +61,13 @@ suspend fun savePhoneUsage(context: Context, date: LocalDate, usage: Long) = wit
     try {
         FileOutputStream(file).use { it.write(usage.toString().toByteArray()) }
     } catch (e: Exception) {
-        // If something goes wrong, we'll just log the error and continue.
+        // Errors during this file operation are not critical, so they are not propagated.
     }
 }
 
 /**
- * This function reads the cached phone usage for a given date from a file.
- * If the file doesn't exist, it returns null.
+ * function reads the cached phone usage data from a local file.
+ * If the file for the given date does not exist, it returns null.
  */
 suspend fun readPhoneUsageForDate(context: Context, date: LocalDate): Long? = withContext(Dispatchers.IO) {
     val file = File(File(context.filesDir, "usage_stats"), "$date.txt")
